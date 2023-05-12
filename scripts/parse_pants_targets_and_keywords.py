@@ -9,7 +9,7 @@ from optparse import OptionParser
 
 class ClassHierarchyResolver(ast.NodeVisitor):
   def __init__(self, node):
-    self.class_hierarchy = dict()
+    self.class_hierarchy = {}
     self.visit(node)
 
   def visit_ClassDef(self, node):
@@ -17,15 +17,14 @@ class ClassHierarchyResolver(ast.NodeVisitor):
     self.class_hierarchy[node.name] = base.id
 
   def resolve(self, name):
-    if name in self.class_hierarchy:
-      base = self.class_hierarchy[name]
-      return self.resolve(base)
-    else:
+    if name not in self.class_hierarchy:
       return name
+    base = self.class_hierarchy[name]
+    return self.resolve(base)
 
 class AssignResolver(ast.NodeVisitor):
   def __init__(self, node):
-    self.assigns = dict()
+    self.assigns = {}
     self.visit(node)
 
   def visit_Assign(self, node):
@@ -35,11 +34,10 @@ class AssignResolver(ast.NodeVisitor):
           self.assigns[t.id] = node.value.id
 
   def resolve(self, name):
-    if name in self.assigns:
-      assign = self.assigns[name]
-      return self.resolve(assign)
-    else:
+    if name not in self.assigns:
       return name
+    assign = self.assigns[name]
+    return self.resolve(assign)
 
 class TargetClassVisitor(ast.NodeVisitor):
   def __init__(self, class_hierarchy_resolver):
@@ -48,7 +46,7 @@ class TargetClassVisitor(ast.NodeVisitor):
 
   def visit_ClassDef(self, node):
     base = self.class_hierarchy_resolver.resolve(node.name)
-    if base == "Target" or base == "object":
+    if base in ["Target", "object"]:
       self.targets.add(node)
 
 class InitFunctionVisitor(ast.NodeVisitor):
